@@ -86,5 +86,6 @@ function init() {
 importAll(
 	'lib/glowcore.js',
 	'lib/glowexts.js',
+	'utils.js',
 	'game.js',
 init);
