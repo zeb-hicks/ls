@@ -48,6 +48,7 @@ Unit.prototype = {
 	get direction() { return this.direction.value; },
 
 	order: function(type, on) {
+    	"use strict";
 		if (on instanceof GLOW.Vector2) {
 			// Location
 			this.orders.push(new UnitOrder({
@@ -70,9 +71,11 @@ Unit.prototype = {
 		}
 	},
 	update: function(dt) {
+    	"use strict";
 
 	},
 	draw: function(dt,pmat) {
+    	"use strict";
 		this.internal.worldMatrix.copy(pmat);
 		this.internal.worldMatrix.multiplySelf(this.internal.localMatrix);
 	}

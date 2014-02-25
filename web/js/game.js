@@ -158,6 +158,7 @@ Game.loop = function() {
 };
 
 Game.draw = function() {
+    "use strict";
 	var dt = performance.now() - Game.clock.drawTime;
 	Game.clock.drawTime += dt;
 	dt /= 1000;

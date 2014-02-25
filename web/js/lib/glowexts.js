@@ -2336,6 +2336,8 @@ GLOW.Node = function( shader ) {
 
 GLOW.Node.prototype.update = function( dt, parentGlobalMatrix, cameraInverseMatrix ) {
 
+    "use strict";
+
     if( this.useXYZStyleTransform ) {
         this.localMatrix.setPosition( this.position.x, this.position.y, this.position.z );
         this.localMatrix.setRotation( this.rotation.x, this.rotation.y, this.rotation.z );

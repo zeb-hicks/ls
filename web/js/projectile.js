@@ -22,16 +22,17 @@ var Projectile = function(o) {
 	this.particle = null;
 	if (o.particle !== undefined) this.particle = o.particle;
 
+	SceneNode.constructor.call(this, o);
+
 };
 
 Projectile.prototype = Object.create(SceneNode.prototype);
 Projectile.constructor = Projectile;
 
 Projectile.prototype.update = function(dt, pgm, cim) {
+	"use strict";
 
 	SceneNode.prototype.update.call(this, dt, pgm, cim);
-
-	console.log('Update on Projectile.');
 
 }
 

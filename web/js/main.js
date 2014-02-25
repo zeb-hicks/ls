@@ -80,6 +80,7 @@ function loadFile(f,cb) {
 }
 
 function init() {
+    "use strict";
 	Game.init();
 }
 

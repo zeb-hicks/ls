@@ -1,8 +1,10 @@
 var SceneNode = function(o) {
 
+    "use strict";
+
 	if (o === undefined) o = {};
 
-
+	GLOW.Node.call(this);
 
 };
 
@@ -12,8 +14,8 @@ SceneNode.constructor = SceneNode;
 
 SceneNode.prototype.update = function(dt, pgm, cim) {
 
-	GLOW.Node.prototype.update.call(this, dt, pgm, cim);
+    "use strict";
 
-	console.log('Update on SceneNode');
+	GLOW.Node.prototype.update.call(this, dt, pgm, cim);
 
 };
