@@ -10,7 +10,7 @@ varying vec3 normal;
 varying vec2 uv;
 
 void main() {
-	normal = normals;
+	normal = normalize(normals * mat3(localMatrix[0].xyz, localMatrix[1].xyz, localMatrix[2].xyz));
 	uv = uvs;
-	gl_Position = vec4(vertices, 1.0) * localMatrix * projectionMatrix * viewMatrix;
+	gl_Position = localMatrix * projectionMatrix * viewMatrix * vec4(vertices, 1.0);
 }

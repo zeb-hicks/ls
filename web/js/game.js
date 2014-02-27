@@ -13,6 +13,8 @@ Game.init = function() {
 	GLOW.defaultCamera.position.set(0, 0, 10);
 	GLOW.defaultCamera.update();
 
+	World.loadLevel();
+
 	Game.loop();
 	Game.draw();
 
@@ -132,8 +134,12 @@ Game.loop = function() {
 		Game.input.mouse.wheel = 0;
 	}
 
-	if (Game.input.mouse.locked) {
+	if (Game.input.mouse.buttons[0]) {
 		Game.camera.angle += Game.input.mouse.dx * 0.001;
+
+		Game.input.mouse.dx = 0;
+		Game.input.mouse.dy = 0;
+	} else {
 
 		Game.input.mouse.dx = 0;
 		Game.input.mouse.dy = 0;
@@ -142,7 +148,7 @@ Game.loop = function() {
 	var radius = 32 / (Game.camera.zoom * Game.camera.zoom);
 
 	Game.camera.targetPosition.x = Game.player.position.x + 16 * radius * Math.cos(Game.camera.angle);
-	Game.camera.targetPosition.y = Game.player.position.y + 8 * radius;
+	Game.camera.targetPosition.y = Game.player.position.y + 32 * radius;
 	Game.camera.targetPosition.z = Game.player.position.z + 16 * radius * Math.sin(Game.camera.angle);
 
 	Game.camera.position.x += (Game.camera.targetPosition.x - Game.camera.position.x) * dt * 16;
