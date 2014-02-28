@@ -1,4 +1,6 @@
+/// constants.js
 /// scene.js
+/// camera.js
 /// world.js
 /// unit.js
 /// net.js
@@ -31,6 +33,7 @@ Game.camera = {
 	target: new GLOW.Vector3(0, 0, 0),
 	angle: 0,
 	zoom: 2,
+	tilt: 1.1,
 	viewDist: 2
 };
 
@@ -124,41 +127,15 @@ Game.loop = function() {
 		}
 	}
 
-	// Update player(s)
+	Camera.update(dt);
 
-	// Update camera
+	// Reset input.
+	Game.input.mouse.dx = 0;
+	Game.input.mouse.dy = 0;
 
 	if (Game.input.mouse.wheel !== 0) {
-		Game.camera.zoom -= Game.input.mouse.wheel * 0.1;
-		Game.camera.zoom = Math.max(1, Math.min(6, Game.camera.zoom));
 		Game.input.mouse.wheel = 0;
 	}
-
-	if (Game.input.mouse.buttons[0]) {
-		Game.camera.angle += Game.input.mouse.dx * 0.001;
-
-		Game.input.mouse.dx = 0;
-		Game.input.mouse.dy = 0;
-	} else {
-
-		Game.input.mouse.dx = 0;
-		Game.input.mouse.dy = 0;
-	}
-
-	var radius = 32 / (Game.camera.zoom * Game.camera.zoom);
-
-	Game.camera.targetPosition.x = Game.player.position.x + 16 * radius * Math.cos(Game.camera.angle);
-	Game.camera.targetPosition.y = Game.player.position.y + 32 * radius;
-	Game.camera.targetPosition.z = Game.player.position.z + 16 * radius * Math.sin(Game.camera.angle);
-
-	Game.camera.position.x += (Game.camera.targetPosition.x - Game.camera.position.x) * dt * 16;
-	Game.camera.position.y += (Game.camera.targetPosition.y - Game.camera.position.y) * dt * 16;
-	Game.camera.position.z += (Game.camera.targetPosition.z - Game.camera.position.z) * dt * 16;
-
-	GLOW.defaultCamera.localMatrix.setPosition(Game.camera.position.x, Game.camera.position.y, Game.camera.position.z);
-	GLOW.defaultCamera.position.set(Game.camera.position.x, Game.camera.position.y, Game.camera.position.z);
-	GLOW.defaultCamera.target.set(0, 0, 0);
-	GLOW.defaultCamera.update();
 
 	setTimeout(Game.loop, 16);
 };
@@ -181,7 +158,13 @@ Game.draw = function() {
 	// Scene.GX.enableDepthTest();
 	// Scene.GX.enableBlend(true, { equation: GL.FUNC_ADD, src: GL.SRC_ALPHA, dst: GL.ONE_MINUS_SRC_ALPHA });
 
+	// Draw the world first.
+
 	World.draw();
+
+	// Next we'll sort the particles to be drawn.
+
+
 
 };
 
@@ -209,6 +192,15 @@ document.body.addEventListener('mousedown', function(e) { Game.input.mouse.butto
 document.body.addEventListener('mouseup', function(e) { Game.input.mouse.buttons[e.button] = false; });
 document.body.addEventListener('contextmenu', function(e) { e.preventDefault(); });
 document.body.addEventListener('wheel', function(e) { Game.input.mouse.wheel += e.deltaY / 100; });
+document.body.addEventListener('keydown', function(e) { Game.input.keyboard.keys[e.which] = true; if (e.keyCode !== KEY_F5 && !(e.keyCode === KEY_J && e.ctrlKey && e.shiftKey)) e.preventDefault(); });
+document.body.addEventListener('keyup', function(e) { Game.input.keyboard.keys[e.which] = false; e.preventDefault(); });
+window.addEventListener('focus', function(e) {
+});
+window.addEventListener('blur', function(e) {
+	for (var i = 0; i < Game.input.keyboard.keys.length; i++) Game.input.keyboard.keys[i] = false;
+	for (var i = 0; i < Game.input.mouse.buttons.length; i++) Game.input.mouse.buttons[i] = false;
+	Game.input.mouse.wheel = 0;
+});
 
 // Pointer Lock Stuff
 
