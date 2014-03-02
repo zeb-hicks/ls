@@ -17,6 +17,10 @@ Game.init = function() {
 
 	World.loadLevel();
 
+	Game.rtFloat = Scene.GX.enableExtension('OES_texture_float');
+	Game.dataArray = new Float32Array(window.innerWidth * window.innerHeight * 4);
+	Game.dataBuffer = new GLOW.FBO({ type: GL.FLOAT, data: Game.dataArray });
+
 	Game.loop();
 	Game.draw();
 
@@ -160,7 +164,28 @@ Game.draw = function() {
 
 	// Draw the world first.
 
-	World.draw();
+	// Game.dataBuffer.bind();
+
+	World.draw(dt, true);
+
+	var pb = new Uint8Array(4);
+	Scene.GX.GL.readPixels(Game.input.mouse.x, window.innerHeight - Game.input.mouse.y, 1, 1, GL.RGBA, GL.UNSIGNED_BYTE, pb);
+	// var off = (Game.input.mouse.x + Game.input.mouse.y * window.innerWidth) * 4;
+	// pb[0] = Game.dataArray[off+0];
+	// pb[1] = Game.dataArray[off+1];
+	// pb[2] = Game.dataArray[off+2];
+	// pb[3] = Game.dataArray[off+3];
+	colorBox.style.backgroundColor = 'rgba(' + pb[0] + ', ' + (pb[1]) + ', '+ (pb[2]) + ', ' + (pb[3]) + ')';
+	// if (pb[3] == 0) {
+	// 	colorBox.style.border = '2px solid #c00';
+	// } else {
+	// 	colorBox.style.border = '2px solid #fff';
+	// }
+	// console.log('Pixel reads ', pb);
+
+	// Game.dataBuffer.unbind();
+
+	World.draw(dt, true);
 
 	// Next we'll sort the particles to be drawn.
 
@@ -171,6 +196,15 @@ Game.draw = function() {
 
 
 // Event Handlers
+
+
+window.colorBox = document.createElement('div');
+colorBox.style.position = 'absolute';
+colorBox.style.left = '0px';
+colorBox.style.top = '0px';
+colorBox.style.width = '32px';
+colorBox.style.height = '32px';
+document.body.appendChild(colorBox);
 
 document.body.addEventListener('mousemove', function(e) {
 	if (Game.input.mouse.locked) {

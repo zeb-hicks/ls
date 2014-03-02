@@ -1607,6 +1607,7 @@ GLOW.Geometry = {
     },
 
     faceNormals: function( vertices, elements ) {
+        console.log('Make normals with these:', vertices, elements);
         var normals = new Array( vertices.length );
         var e, el = elements.length;
         var a, b, c;

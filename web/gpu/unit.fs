@@ -1,13 +1,34 @@
 precision highp float;
 
+uniform sampler2D tDRock;
+uniform sampler2D tNRock;
+uniform sampler2D tSRock;
+uniform sampler2D tDGrass;
+uniform sampler2D tNGrass;
+uniform sampler2D tSGrass;
+uniform sampler2D tDTiles;
+uniform sampler2D tNTiles;
+uniform sampler2D tSTiles;
+
+uniform bool dataPass;
+uniform float id;
+
 uniform vec2 location;
+uniform vec3 cameraPosition;
 
 varying vec3 normal;
 varying vec2 uv;
+varying vec3 pos;
 
 void main() {
-	vec3 color = vec3(1.0, 0.0, 0.0);
-	color = normal;
-	color = vec3(uv, 0.0);
+	vec3 color = vec3(0.0, 0.0, 0.0);
+	color.xyz = normal;
+	color.xyz += -0.1 + 0.2 * vec3(pow(mod(uv.x * 128.0, 1.0), 16.0) + pow(mod(uv.y * 128.0, 1.0), 16.0));
 	gl_FragColor = vec4(color, 1.0);
+	if (dataPass == true) {
+		// vec3 ps = abs(pos);
+		gl_FragColor.x = pos.x / 128.0 + 0.5;
+		gl_FragColor.y = pos.z / 128.0 + 0.5;
+		gl_FragColor.z = id;
+	}
 }

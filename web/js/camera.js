@@ -1,5 +1,3 @@
-/// constants.js
-
 var Camera = {}
 
 Camera.update = function(dt) {
@@ -33,4 +31,4 @@ Camera.update = function(dt) {
 	GLOW.defaultCamera.target.set(0, 0, 0);
 	GLOW.defaultCamera.update();
 
-}
+};
