@@ -17,10 +17,6 @@ Game.init = function() {
 
 	World.loadLevel();
 
-	Game.rtFloat = Scene.GX.enableExtension('OES_texture_float');
-	Game.dataArray = new Float32Array(window.innerWidth * window.innerHeight * 4);
-	Game.dataBuffer = new GLOW.FBO({ type: GL.FLOAT, data: Game.dataArray });
-
 	Game.loop();
 	Game.draw();
 
