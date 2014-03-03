@@ -22,8 +22,17 @@ varying vec3 pos;
 
 void main() {
 	vec3 color = vec3(0.0, 0.0, 0.0);
-	color.xyz = normal;
-	color.xyz += -0.1 + 0.2 * vec3(pow(mod(uv.x * 128.0, 1.0), 16.0) + pow(mod(uv.y * 128.0, 1.0), 16.0));
+	color.xyz = normal * 0.5 + 0.5;
+	// vec3 up = vec3(0.0, 1.0, 0.0);
+	// color.xyz = vec3(pow(dot(normal, up), 2.0));
+
+	// Grid
+	float grid = min(1.0, pow(mod(uv.x * 128.0, 1.0) * 2.0 - 1.0, 16.0) + pow(mod(uv.y * 128.0, 1.0) * 2.0 - 1.0, 16.0));
+
+	color = color * 0.9 + 0.1 * grid;
+
+	// color.xyz = vec3(pow(mod(uv.x * 128.0, 1.0), 16.0) + pow(mod(uv.y * 128.0, 1.0), 16.0));
+	// color.xyz = vec3(pow(mod(uv.x * 128.0, 1.0) * 2.0 - 1.0, 16.0) + pow(mod(uv.y * 128.0, 1.0) * 2.0 - 1.0, 16.0));
 	gl_FragColor = vec4(color, 1.0);
 	if (dataPass == true) {
 		// vec3 ps = abs(pos);

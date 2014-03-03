@@ -13,35 +13,28 @@ World.loadLevel = function(o) {
 	var vertices = new Float32Array(res * res * 3);
 	var indices = new Float32Array((res - 1) * (res - 1) * 6);
 	var uvs = new Float32Array((res - 1) * (res - 1) * 6 * 2);
-	var normals = new Float32Array(res * res * 3);
+	// var normals = new Float32Array(res * res * 3);
+
+	var av = new GLOW.Vector3(),
+		bv = new GLOW.Vector3(),
+		cv = new GLOW.Vector3(),
+		nv = new GLOW.Vector3();
 
 	for (y = 0; y < res; y++) {
 		for (x = 0; x < res; x++) {
 			i = (x + y * res) * 3;
 			j = (x + y * res) * 2;
+
+			var dist = Math.sqrt(Math.pow(x - hr, 2.0) + Math.pow(y - hr, 2.0));
+
 			vertices[i+0] = x - hr + 0.5;
-			vertices[i+1] = 0; //x / (y + 1) / 32 + y / (x + 1) / 32;
+			vertices[i+1] = Math.cos(Math.PI * dist / 80) * 16;
 			vertices[i+2] = y - hr + 0.5;
 
-			normals[i+0] = 0;
-			normals[i+1] = 1;
-			normals[i+2] = 0;
-
-			// l = normals[i+0] * normals[i+0] + normals[i+1] * normals[i+1] + normals[i+2] * normals[i+2];
-			// l /= 3;
-
-			// normals[i+0] *= l;
-			// normals[i+1] *= l;
-			// normals[i+2] *= l;
-
-			// uvs[j+0] = x % 2;
-			// uvs[j+1] = y % 2;
 			uvs[j+0] = x / res;
 			uvs[j+1] = y / res;
 		}
 	}
-
-	// var normals = new Float32Array(GLOW.Geometry.faceNormals(vertices, indices));
 
 	for (y = 0; y < res - 1; y++) {
 		for (x = 0; x < res - 1; x++) {
@@ -57,9 +50,31 @@ World.loadLevel = function(o) {
 		}
 	}
 
-	// for (i = 0; i < vertices.length; i++) if (isNaN(vertices[i])) console.log('Vert' + i + ' is NaN');
-	// for (i = 0; i < uvs.length; i++) if (isNaN(uvs[i])) console.log('UV' + i + ' is NaN');
-	// for (i = 0; i < normals.length; i++) if (!isNaN(normals[i])) console.log('Normal' + i + ' is not NaN');
+	// for (i = 0; i < indices.length / 3; i++) {
+	// 	j = i * 3;
+	// 	x = indices[j+0];
+	// 	y = indices[j+1];
+	// 	z = indices[j+2];
+
+	// 	av.set(vertices[x*3+0], vertices[x*3+1], vertices[x*3+2]);
+	// 	bv.set(vertices[y*3+0], vertices[y*3+1], vertices[y*3+2]);
+	// 	cv.set(vertices[z*3+0], vertices[z*3+1], vertices[z*3+2]);
+
+	// 	bv.subSelf(av);
+	// 	cv.subSelf(av);
+
+	// 	nv.cross(bv, cv).normalize();
+
+	// 	normals[x*3+0] = nv.x;
+	// 	normals[x*3+1] = -nv.y;
+	// 	normals[x*3+2] = nv.z;
+	// 	normals[y*3+0] = nv.x;
+	// 	normals[y*3+1] = -nv.y;
+	// 	normals[y*3+2] = nv.z;
+	// 	normals[z*3+0] = nv.x;
+	// 	normals[z*3+1] = -nv.y;
+	// 	normals[z*3+2] = nv.z;
+	// }
 
 	World.plane = new GLOW.Shader({
 		vertexShader: loadFile('./gpu/unit.vs'),
@@ -70,12 +85,14 @@ World.loadLevel = function(o) {
 			viewMatrix: GLOW.defaultCamera.inverse,
 			cameraPosition: GLOW.defaultCamera.position,
 
+			tHeight: new GLOW.Texture('./img/height.png'),
+
 			dataPass: new GLOW.Bool(false),
 			id: new GLOW.Float(0),
 
 			vertices: vertices,
-			uvs: uvs,
-			normals: normals
+			uvs: uvs
+			// normals: normals
 		},
 		indices: indices,
 		primitives: GL.TRIANGLES

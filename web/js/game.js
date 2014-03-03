@@ -181,7 +181,7 @@ Game.draw = function() {
 
 	// Game.dataBuffer.unbind();
 
-	World.draw(dt, true);
+	World.draw(dt, false);
 
 	// Next we'll sort the particles to be drawn.
 
