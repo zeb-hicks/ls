@@ -9,6 +9,8 @@ var GX = Scene.GX = new GLOW.Context({
 
 GX.setupCulling({frontFace: GL.CW});
 
+Scene.particles = [];
+
 Scene.add = function(obj) {
 
 	if (obj instanceof Scene.Model) {

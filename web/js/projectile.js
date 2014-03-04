@@ -34,7 +34,16 @@ Projectile.prototype.update = function(dt, pgm, cim) {
 
 	SceneNode.prototype.update.call(this, dt, pgm, cim);
 
-}
+};
+
+Projectile.prototype.draw = function(dt) {
+	"use strict";
+
+	if (this.particle !== undefined) this.particle.draw(dt);
+
+	SceneNode.prorotype.draw.call(this, dt);
+
+};
 
 Projectile.Modes = {
 	Basic: 0,

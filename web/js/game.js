@@ -185,7 +185,18 @@ Game.draw = function() {
 
 	// Next we'll sort the particles to be drawn.
 
+	Scene.particles.sort(function(a, b) {
+		var da, db;
 
+		da = Math.pow(a.position.x - GLOW.defaultCamera.position.x, 2.0) + Math.pow(a.position.y - GLOW.defaultCamera.position.y, 2.0) + Math.pow(a.position.z - GLOW.defaultCamera.position.z, 2.0);
+		db = Math.pow(b.position.x - GLOW.defaultCamera.position.x, 2.0) + Math.pow(b.position.y - GLOW.defaultCamera.position.y, 2.0) + Math.pow(b.position.z - GLOW.defaultCamera.position.z, 2.0);
+
+		return da - db;
+	});
+
+	for (var i = 0; i < Scene.particles.length; i++) {
+		Scene.particles[i].draw();
+	}
 
 };
 

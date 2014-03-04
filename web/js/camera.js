@@ -10,7 +10,7 @@ Camera.update = function(dt) {
 
 	if (Game.input.keyboard.keys[KEY_ALT] == true) {
 		Game.camera.angle += Game.input.mouse.dx * 0.001;
-		Game.camera.tilt += Game.input.mouse.dy * 0.001;
+		Game.camera.tilt = Math.max(0, Math.min(Math.HPI - 0.01, Game.camera.tilt + Game.input.mouse.dy * 0.001));
 	}
 
 	var radius = 32 / (Game.camera.zoom * Game.camera.zoom);

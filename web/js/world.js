@@ -85,7 +85,8 @@ World.loadLevel = function(o) {
 			viewMatrix: GLOW.defaultCamera.inverse,
 			cameraPosition: GLOW.defaultCamera.position,
 
-			tHeight: new GLOW.Texture('./img/height.png'),
+			tHeight: new GLOW.Texture({url: './img/height.png'}),
+			mapres: new GLOW.Vector2(1024, 1024),
 
 			dataPass: new GLOW.Bool(false),
 			id: new GLOW.Float(0),
