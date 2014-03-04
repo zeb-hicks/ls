@@ -1,19 +1,26 @@
 /// noise.js
 /// random.js
 
-var World = {};
+var World = {
+	size: 128,
+	hres: 1024,
+	ready: false
+};
 
 World.loadLevel = function(o) {
 	"use strict";
 
+	if (o === undefined) o = {};
+
+	World.size = (o.size !== undefined ? o.size : 128);
+
 	var i, j, k, l, x, y, z;
-	var res = 128;
+	var res = World.size;
 	var hr = res / 2;
 
 	var vertices = new Float32Array(res * res * 3);
 	var indices = new Float32Array((res - 1) * (res - 1) * 6);
 	var uvs = new Float32Array((res - 1) * (res - 1) * 6 * 2);
-	// var normals = new Float32Array(res * res * 3);
 
 	var av = new GLOW.Vector3(),
 		bv = new GLOW.Vector3(),
@@ -50,32 +57,6 @@ World.loadLevel = function(o) {
 		}
 	}
 
-	// for (i = 0; i < indices.length / 3; i++) {
-	// 	j = i * 3;
-	// 	x = indices[j+0];
-	// 	y = indices[j+1];
-	// 	z = indices[j+2];
-
-	// 	av.set(vertices[x*3+0], vertices[x*3+1], vertices[x*3+2]);
-	// 	bv.set(vertices[y*3+0], vertices[y*3+1], vertices[y*3+2]);
-	// 	cv.set(vertices[z*3+0], vertices[z*3+1], vertices[z*3+2]);
-
-	// 	bv.subSelf(av);
-	// 	cv.subSelf(av);
-
-	// 	nv.cross(bv, cv).normalize();
-
-	// 	normals[x*3+0] = nv.x;
-	// 	normals[x*3+1] = -nv.y;
-	// 	normals[x*3+2] = nv.z;
-	// 	normals[y*3+0] = nv.x;
-	// 	normals[y*3+1] = -nv.y;
-	// 	normals[y*3+2] = nv.z;
-	// 	normals[z*3+0] = nv.x;
-	// 	normals[z*3+1] = -nv.y;
-	// 	normals[z*3+2] = nv.z;
-	// }
-
 	World.plane = new GLOW.Shader({
 		vertexShader: loadFile('./gpu/unit.vs'),
 		fragmentShader: loadFile('./gpu/unit.fs'),
@@ -85,15 +66,33 @@ World.loadLevel = function(o) {
 			viewMatrix: GLOW.defaultCamera.inverse,
 			cameraPosition: GLOW.defaultCamera.position,
 
-			tHeight: new GLOW.Texture({url: './img/height.png'}),
-			mapres: new GLOW.Vector2(1024, 1024),
+			tHeight: World.heightMap,
+			vHeight: World.heightMap2,
+
+			tHRock: new GLOW.Texture({url: './img/world/rock/rock_height.jpg'}),
+			tHGrass: new GLOW.Texture({url: './img/world/grass/grass_thick_height.jpg'}),
+			tHTiles: new GLOW.Texture({url: './img/world/struct/square_tiles_height.jpg'}),
+
+			tDRock: new GLOW.Texture({url: './img/world/rock/rock_diffuse.jpg'}),
+			tDGrass: new GLOW.Texture({url: './img/world/grass/grass_thick_diffuse.jpg'}),
+			tDTiles: new GLOW.Texture({url: './img/world/struct/square_tiles_diffuse.jpg'}),
+
+			tNRock: new GLOW.Texture({url: './img/world/rock/rock_normal.jpg'}),
+			tNGrass: new GLOW.Texture({url: './img/world/grass/grass_thick_normal.jpg'}),
+			tNTiles: new GLOW.Texture({url: './img/world/struct/square_tiles_normal.jpg'}),
+
+			tSRock: new GLOW.Texture({url: './img/world/rock/rock_spec.jpg'}),
+			tSGrass: new GLOW.Texture({url: './img/world/grass/grass_thick_spec.jpg'}),
+			tSTiles: new GLOW.Texture({url: './img/world/struct/square_tiles_spec.jpg'}),
+
+			mapres: new GLOW.Vector2(World.hres, World.hres),
+			vertres: new GLOW.Vector2(World.size, World.size),
 
 			dataPass: new GLOW.Bool(false),
 			id: new GLOW.Float(0),
 
 			vertices: vertices,
 			uvs: uvs
-			// normals: normals
 		},
 		indices: indices,
 		primitives: GL.TRIANGLES
@@ -101,12 +100,47 @@ World.loadLevel = function(o) {
 
 };
 
+World.heightCvs = document.createElement('canvas');
+World.heightCvs2 = document.createElement('canvas');
+World.heightCtx = World.heightCvs.getContext('2d');
+World.heightCtx2 = World.heightCvs2.getContext('2d');
+World.heightImage = new Image();
+World.heightImage.addEventListener('load', function(e) {
+	World.heightCvs.width = this.width;
+	World.heightCvs.height = this.height;
+	World.heightCvs2.width = World.size;
+	World.heightCvs2.height = World.size;
+
+	World.heightCtx.fillStyle = '#000';
+	World.heightCtx.fillRect(0, 0, World.hres, World.hres);
+	World.heightCtx.drawImage(this, 0, 0);
+
+	// World.heightCtx.fillRect(512, 512, 512, 512);
+
+	World.heightCtx2.fillStyle = '#000';
+	World.heightCtx2.fillRect(0, 0, World.size, World.size);
+	World.heightCtx2.drawImage(World.heightCvs, 0, 0, World.size, World.size);
+
+	World.heightMap.data = World.heightCvs;
+	World.heightMap2.data = World.heightCvs2;
+	World.heightMap.updateTexture();
+	World.heightMap2.updateTexture();
+
+	World.ready = true;
+});
+World.heightImage.src = './img/map.png';
+World.heightMap = new GLOW.Texture({});
+World.heightMap2 = new GLOW.Texture({});
+
+// document.body.appendChild(World.heightCvs2);
+
 World.update = function(dt) {
 	"use strict";
 
 };
 
 World.draw = function(dt, data) {
+	if (World.ready === false) return;
 	"use strict";
 	if (World.plane.uniforms.viewMatrix !== undefined) GX.cache.invalidateUniform(World.plane.uniforms.viewMatrix);
 	if (World.plane.uniforms.cameraPosition !== undefined) GX.cache.invalidateUniform(World.plane.uniforms.cameraPosition);

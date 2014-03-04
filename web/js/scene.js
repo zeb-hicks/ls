@@ -3,11 +3,13 @@
 var Scene = {};
 
 var GX = Scene.GX = new GLOW.Context({
-	clear: { red: 0.1, green: 0.1, blue: 0.1 },
+	clear: { red: 0, green: 0, blue: 0 },
 	antialias: false
 });
 
 GX.setupCulling({frontFace: GL.CW});
+
+GX.enableExtension('OES_standard_derivatives');
 
 Scene.particles = [];
 
