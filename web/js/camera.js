@@ -5,7 +5,7 @@ Camera.update = function(dt) {
 
 	if (Game.input.mouse.wheel !== 0) {
 		Game.camera.zoom -= Game.input.mouse.wheel * 0.1;
-		Game.camera.zoom = Math.max(1, Math.min(6, Game.camera.zoom));
+		Game.camera.zoom = Math.max(1, Math.min(12, Game.camera.zoom));
 	}
 
 	if (Game.input.keyboard.keys[KEY_ALT] === true) {
@@ -19,11 +19,17 @@ Camera.update = function(dt) {
 		dr -= Game.camera.angle;
 		var dx = Math.sin(dr) * dl * 0.23 / Game.camera.zoom;
 		var dz = Math.cos(dr) * dl * 0.23 / Game.camera.zoom;
-		Game.camera.target.x += dx;
-		Game.camera.target.z += dz;
-		Game.camera.position.x += dx;
-		Game.camera.position.z += dz;
+		Game.camera.panDelta.x += dx;
+		Game.camera.panDelta.z += dz;
+		// Game.camera.target.x += dx;
+		// Game.camera.target.z += dz;
+		// Game.camera.position.x += dx;
+		// Game.camera.position.z += dz;
 	}
+
+	Game.camera.panDelta.multiplyScalar(0.5);
+	Game.camera.target.addSelf(Game.camera.panDelta);
+	Game.camera.position.addSelf(Game.camera.panDelta);
 
 	var radius = 32 / (Game.camera.zoom * Game.camera.zoom);
 
@@ -32,7 +38,7 @@ Camera.update = function(dt) {
 
 	if (World.heightCtx !== undefined) {
 		var id = World.heightCtx.getImageData(Math.round(Game.camera.target.x / World.size * World.hres) + World.hres / 2, Math.round(Game.camera.target.z / World.size * World.hres) + World.hres / 2, 1, 1);
-		Game.camera.target.y = id.data[0] / 255 * 32;
+		Game.camera.target.y = id.data[0] / 255 * World.height;
 	}
 
 	Game.camera.targetPosition.x = Game.camera.target.x + dh * radius * Math.cos(Game.camera.angle);

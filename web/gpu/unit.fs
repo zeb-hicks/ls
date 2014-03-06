@@ -76,42 +76,44 @@ void main() {
 
 	vec2 suv = uv * vec2(16.0);
 	float hr = texture2D(tHRock, suv).x * 0.1;
+	// vec3 dr = texture2D(tDRock, suv).xyz;
+	// vec3 nr = normalize(texture2D(tNRock, suv).xyz * 2.0 - 1.0);
+	// vec3 sr = texture2D(tSRock, suv).xyz;
+
 	float hg = texture2D(tHGrass, suv).x * mpd.y;
+	// vec3 dg = texture2D(tDGrass, suv).xyz;
+	// vec3 ng = normalize(texture2D(tNGrass, suv).xyz * 2.0 - 1.0);
+	// vec3 sg = texture2D(tSGrass, suv).xyz;
+
 	float ht = texture2D(tHTiles, suv).x * mpd.z;
-	vec3 dr = texture2D(tDRock, suv).xyz;
-	vec3 dg = texture2D(tDGrass, suv).xyz;
-	vec3 dt = texture2D(tDTiles, suv).xyz;
-	vec3 nr = normalize(texture2D(tNRock, suv).xyz * 2.0 - 1.0);
-	vec3 ng = normalize(texture2D(tNGrass, suv).xyz * 2.0 - 1.0);
-	vec3 nt = normalize(texture2D(tNTiles, suv).xyz * 2.0 - 1.0);
-	vec3 sr = texture2D(tSRock, suv).xyz;
-	vec3 sg = texture2D(tSGrass, suv).xyz;
-	vec3 st = texture2D(tSTiles, suv).xyz;
+	// vec3 dt = texture2D(tDTiles, suv).xyz;
+	// vec3 nt = normalize(texture2D(tNTiles, suv).xyz * 2.0 - 1.0);
+	// vec3 st = texture2D(tSTiles, suv).xyz;
 	vec3 tn;
 	vec3 ts;
 
 	if (hr > hg + 0.01) {
 		if (hr > ht + 0.01) {
-			color = dr;
-			tn = nr;
-			ts = sr;
+			color = texture2D(tDRock, suv).xyz;
+			tn = normalize(texture2D(tNRock, suv).xyz * 2.0 - 1.0);
+			ts = texture2D(tSRock, suv).xyz;
 			// color.xyz = vec3(1.0, 0.0, 0.0);
 		} else {
-			color = dt;
-			tn = nt;
-			ts = st;
+			color = texture2D(tDTiles, suv).xyz;
+			tn = normalize(texture2D(tNTiles, suv).xyz * 2.0 - 1.0);
+			ts = texture2D(tSTiles, suv).xyz;
 			// color.xyz = vec3(0.0, 0.0, 1.0);
 		}
 	} else {
 		if (hg > ht + 0.01) {
-			color = dg;
-			tn = ng;
-			ts = sg;
+			color = texture2D(tDGrass, suv).xyz;
+			tn = normalize(texture2D(tNGrass, suv).xyz * 2.0 - 1.0);
+			ts = texture2D(tSGrass, suv).xyz;
 			// color.xyz = vec3(0.0, 1.0, 0.0);
 		} else {
-			color = dt;
-			tn = nt;
-			ts = st;
+			color = texture2D(tDTiles, suv).xyz;
+			tn = normalize(texture2D(tNTiles, suv).xyz * 2.0 - 1.0);
+			ts = texture2D(tSTiles, suv).xyz;
 			// color.xyz = vec3(0.0, 0.0, 1.0);
 		}
 	}
@@ -123,7 +125,7 @@ void main() {
 	vec3 hv = normalize((pos - cameraPosition) - up * 32.0);
 
 	color.xyz *= vec3(dot(normal, up));
-	color.xyz += ts * pow(dot(normal, hv), 32.0);
+	color.xyz += ts * ts * pow(dot(normal, hv), 64.0);
 	// color.xyz = vnormal.xyz;
 	// color.xyz = abs(vnormal.xyz);
 	// color.xyz = normal;

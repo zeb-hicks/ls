@@ -2,7 +2,8 @@
 /// random.js
 
 var World = {
-	size: 128,
+	size: 256,
+	height: 32,
 	hres: 1024,
 	ready: false
 };
@@ -12,7 +13,7 @@ World.loadLevel = function(o) {
 
 	if (o === undefined) o = {};
 
-	World.size = (o.size !== undefined ? o.size : 128);
+	// World.size = (o.size !== undefined ? o.size : 128);
 
 	var i, j, k, l, x, y, z;
 	var res = World.size;
@@ -68,6 +69,7 @@ World.loadLevel = function(o) {
 
 			tHeight: World.heightMap,
 			vHeight: World.heightMap2,
+			fHeight: new GLOW.Float(World.height),
 
 			tHRock: new GLOW.Texture({url: './img/world/rock/rock_height.jpg'}),
 			tHGrass: new GLOW.Texture({url: './img/world/grass/grass_thick_height.jpg'}),
@@ -99,6 +101,15 @@ World.loadLevel = function(o) {
 	});
 
 };
+
+// World.mapData = {};
+// World.mapData.canvas = {
+// 	height: document.createElement('canvas'),
+// 	humidity: document.createElement('canvas'),
+// 	artifice: document.createElement('canvas'),
+// 	combined: document.createElement('canvas')
+// };
+// World.mapData.
 
 World.heightCvs = document.createElement('canvas');
 World.heightCvs2 = document.createElement('canvas');
