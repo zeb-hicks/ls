@@ -58,6 +58,14 @@ World.loadLevel = function(o) {
 		}
 	}
 
+	function purge() {
+		Scene.GX.cache.clear();
+	}
+
+	var matFileA = 'dirt/dirt';
+	var matFileB = 'grass/clover_small';
+	var matFileC = 'struct/square_tiles';
+
 	World.plane = new GLOW.Shader({
 		vertexShader: loadFile('./gpu/unit.vs'),
 		fragmentShader: loadFile('./gpu/unit.fs'),
@@ -71,21 +79,21 @@ World.loadLevel = function(o) {
 			vHeight: World.heightMap2,
 			fHeight: new GLOW.Float(World.height),
 
-			tHRock: new GLOW.Texture({url: './img/world/rock/rock_height.jpg'}),
-			tHGrass: new GLOW.Texture({url: './img/world/grass/grass_thick_height.jpg'}),
-			tHTiles: new GLOW.Texture({url: './img/world/struct/square_tiles_height.jpg'}),
+			tHA: new GLOW.Texture({url: './img/world/' + matFileA + '_height.jpg', onLoadComplete: purge}),
+			tHB: new GLOW.Texture({url: './img/world/' + matFileB + '_height.jpg', onLoadComplete: purge}),
+			tHC: new GLOW.Texture({url: './img/world/' + matFileC + '_height.jpg', onLoadComplete: purge}),
 
-			tDRock: new GLOW.Texture({url: './img/world/rock/rock_diffuse.jpg'}),
-			tDGrass: new GLOW.Texture({url: './img/world/grass/grass_thick_diffuse.jpg'}),
-			tDTiles: new GLOW.Texture({url: './img/world/struct/square_tiles_diffuse.jpg'}),
+			tDA: new GLOW.Texture({url: './img/world/' + matFileA + '_diffuse.jpg', onLoadComplete: purge}),
+			tDB: new GLOW.Texture({url: './img/world/' + matFileB + '_diffuse.jpg', onLoadComplete: purge}),
+			tDC: new GLOW.Texture({url: './img/world/' + matFileC + '_diffuse.jpg', onLoadComplete: purge}),
 
-			tNRock: new GLOW.Texture({url: './img/world/rock/rock_normal.jpg'}),
-			tNGrass: new GLOW.Texture({url: './img/world/grass/grass_thick_normal.jpg'}),
-			tNTiles: new GLOW.Texture({url: './img/world/struct/square_tiles_normal.jpg'}),
+			tNA: new GLOW.Texture({url: './img/world/' + matFileA + '_normal.jpg', onLoadComplete: purge}),
+			tNB: new GLOW.Texture({url: './img/world/' + matFileB + '_normal.jpg', onLoadComplete: purge}),
+			tNC: new GLOW.Texture({url: './img/world/' + matFileC + '_normal.jpg', onLoadComplete: purge}),
 
-			tSRock: new GLOW.Texture({url: './img/world/rock/rock_spec.jpg'}),
-			tSGrass: new GLOW.Texture({url: './img/world/grass/grass_thick_spec.jpg'}),
-			tSTiles: new GLOW.Texture({url: './img/world/struct/square_tiles_spec.jpg'}),
+			tSA: new GLOW.Texture({url: './img/world/' + matFileA + '_spec.jpg', onLoadComplete: purge}),
+			tSB: new GLOW.Texture({url: './img/world/' + matFileB + '_spec.jpg', onLoadComplete: purge}),
+			tSC: new GLOW.Texture({url: './img/world/' + matFileC + '_spec.jpg', onLoadComplete: purge}),
 
 			mapres: new GLOW.Vector2(World.hres, World.hres),
 			vertres: new GLOW.Vector2(World.size, World.size),
@@ -132,6 +140,8 @@ World.heightImage.addEventListener('load', function(e) {
 	World.heightCtx2.fillRect(0, 0, World.size, World.size);
 	World.heightCtx2.drawImage(World.heightCvs, 0, 0, World.size, World.size);
 
+	World.heightMap = new GLOW.Texture({});
+	World.heightMap2 = new GLOW.Texture({});
 	World.heightMap.data = World.heightCvs;
 	World.heightMap2.data = World.heightCvs2;
 	World.heightMap.updateTexture();
@@ -140,8 +150,8 @@ World.heightImage.addEventListener('load', function(e) {
 	World.ready = true;
 });
 World.heightImage.src = './img/map.png';
-World.heightMap = new GLOW.Texture({});
-World.heightMap2 = new GLOW.Texture({});
+World.heightMap = undefined;
+World.heightMap2 = undefined;
 
 // document.body.appendChild(World.heightCvs2);
 
@@ -155,11 +165,13 @@ World.draw = function(dt, data) {
 	"use strict";
 	if (World.plane.uniforms.viewMatrix !== undefined) GX.cache.invalidateUniform(World.plane.uniforms.viewMatrix);
 	if (World.plane.uniforms.cameraPosition !== undefined) GX.cache.invalidateUniform(World.plane.uniforms.cameraPosition);
-	if (World.plane.uniforms.dataPass !== undefined) GX.cache.invalidateUniform(World.plane.uniforms.dataPass);
-	if (data === true) {
-		World.plane.dataPass.set(true);
-	} else {
-		World.plane.dataPass.set(false);
+	if (World.plane.uniforms.dataPass !== undefined) {
+		GX.cache.invalidateUniform(World.plane.uniforms.dataPass);
+		if (data === true) {
+			World.plane.dataPass.set(true);
+		} else {
+			World.plane.dataPass.set(false);
+		}
 	}
 	World.plane.draw();
 };

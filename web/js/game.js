@@ -20,10 +20,6 @@ Game.init = function() {
 	Game.loop();
 	Game.draw();
 
-	setInterval(function() {
-		Scene.GX.cache.clear();
-	}, 1000);
-
 };
 
 Game.clock = {
@@ -176,7 +172,7 @@ Game.draw = function() {
 	// pb[1] = Game.dataArray[off+1];
 	// pb[2] = Game.dataArray[off+2];
 	// pb[3] = Game.dataArray[off+3];
-	colorBox.style.backgroundColor = 'rgba(' + pb[0] + ', ' + (pb[1]) + ', '+ (pb[2]) + ', ' + (pb[3]) + ')';
+	// colorBox.style.backgroundColor = 'rgba(' + pb[0] + ', ' + (pb[1]) + ', '+ (pb[2]) + ', ' + (pb[3]) + ')';
 	// if (pb[3] == 0) {
 	// 	colorBox.style.border = '2px solid #c00';
 	// } else {
@@ -210,13 +206,13 @@ Game.draw = function() {
 // Event Handlers
 
 
-window.colorBox = document.createElement('div');
-colorBox.style.position = 'absolute';
-colorBox.style.left = '0px';
-colorBox.style.top = '0px';
-colorBox.style.width = '32px';
-colorBox.style.height = '32px';
-document.body.appendChild(colorBox);
+// window.colorBox = document.createElement('div');
+// colorBox.style.position = 'absolute';
+// colorBox.style.left = '0px';
+// colorBox.style.top = '0px';
+// colorBox.style.width = '32px';
+// colorBox.style.height = '32px';
+// document.body.appendChild(colorBox);
 
 document.body.addEventListener('mousemove', function(e) {
 	if (Game.input.mouse.locked) {

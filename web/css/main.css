@@ -4,3 +4,11 @@ body, html, canvas {
 	margin: 0;
 	padding: 0;
 }
+
+.help {
+	position: absolute;
+	left: 0;
+	top: 0;
+	color: #fff;
+	font-family: Arial, sans-serif;
+}
