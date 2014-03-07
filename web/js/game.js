@@ -233,7 +233,11 @@ document.body.addEventListener('mousemove', function(e) {
 document.body.addEventListener('mousedown', function(e) { Game.input.mouse.buttons[e.button] = true; });
 document.body.addEventListener('mouseup', function(e) { Game.input.mouse.buttons[e.button] = false; });
 document.body.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-document.body.addEventListener((window.onwheel !== undefined ? 'wheel' : 'mousewheel'), function(e) { Game.input.mouse.wheel -= e.wheelDeltaY / 120; });
+if (window.onwheel !== undefined) {
+	document.body.addEventListener('wheel', function(e) { Game.input.mouse.wheel += e.deltaY / 100; });
+} else {
+	document.body.addEventListener('mousewheel', function(e) { Game.input.mouse.wheel -= e.wheelDeltaY / 120; });
+}
 document.body.addEventListener('keydown', function(e) { Game.input.keyboard.keys[e.which] = true; if (e.keyCode !== KEY_F5 && !(e.keyCode === KEY_J && e.ctrlKey && e.shiftKey)) e.preventDefault(); });
 document.body.addEventListener('keyup', function(e) { Game.input.keyboard.keys[e.which] = false; e.preventDefault(); });
 window.addEventListener('focus', function(e) {
