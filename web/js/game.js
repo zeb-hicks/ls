@@ -149,38 +149,43 @@ Game.draw = function() {
 	dt = dt > 0.2 ? 0.2 : dt;
 	requestAnimationFrame(Game.draw);
 
-	Scene.GX.clear();
-
-	// var x, y, r = 3;
-	// for (z=-r;z<r;z++) for (x=-r;x<r;x++) {
-	// 	World.chunk(x, 0, z).draw();
-	// }
-
-	// Scene.GX.enableDepthTest();
-	// Scene.GX.enableBlend(true, { equation: GL.FUNC_ADD, src: GL.SRC_ALPHA, dst: GL.ONE_MINUS_SRC_ALPHA });
-
-	// Draw the world first.
-
-	// Game.dataBuffer.bind();
+	// Scene.GX.clear();
 
 	World.draw(dt, true);
 
 	var pb = new Uint8Array(4);
-	Scene.GX.GL.readPixels(Game.input.mouse.x, window.innerHeight - Game.input.mouse.y, 1, 1, GL.RGBA, GL.UNSIGNED_BYTE, pb);
-	// var off = (Game.input.mouse.x + Game.input.mouse.y * window.innerWidth) * 4;
-	// pb[0] = Game.dataArray[off+0];
-	// pb[1] = Game.dataArray[off+1];
-	// pb[2] = Game.dataArray[off+2];
-	// pb[3] = Game.dataArray[off+3];
-	// colorBox.style.backgroundColor = 'rgba(' + pb[0] + ', ' + (pb[1]) + ', '+ (pb[2]) + ', ' + (pb[3]) + ')';
-	// if (pb[3] == 0) {
-	// 	colorBox.style.border = '2px solid #c00';
-	// } else {
-	// 	colorBox.style.border = '2px solid #fff';
-	// }
-	// console.log('Pixel reads ', pb);
+	World.mapData.hfbo.bind();
+	var diff = World.mapData.hfbo.width / World.size;
+	Scene.GX.GL.readPixels(512 + Game.camera.target.x * diff, 512 + Game.camera.target.z * diff, 1, 1, GL.RGBA, GL.UNSIGNED_BYTE, pb);
+	World.mapData.hfbo.unbind();
 
-	// Game.dataBuffer.unbind();
+	Game.camera.target.y = pb[0] / 255 * World.height;
+
+	Scene.GX.GL.readPixels(Game.input.mouse.x, window.innerHeight - Game.input.mouse.y, 1, 1, GL.RGBA, GL.UNSIGNED_BYTE, pb);
+
+	if (World.mapData.needLoad === true) {
+		World.mapData.hfbo.bind();
+		Scene.drawBillboard(World.mapData.hfbo, World.mapData.heightMap, 0, 0, 1024, 1024);
+		World.mapData.hfbo.unbind();
+		World.mapData.halfbo.bind();
+		Scene.drawBillboard(World.mapData.halfbo, World.mapData.heightMap, 0, 0, 128, 128);
+		World.mapData.halfbo.unbind();
+	}
+
+	if (pb[0] !== 0 && pb[1] !== 0) {
+		ml.px = ml.x;
+		ml.py = ml.y;
+		ml.x += (pb[0] - ml.x) / 8;
+		ml.y += (pb[1] - ml.y) / 8;
+		ml.r = Math.atan2(ml.py - ml.y, ml.px - ml.x);
+	}
+
+	World.mapData.lfbo.bind();
+
+	Scene.GX.clear();
+	Scene.drawBillboard(World.mapData.lfbo, Scene.getTexture('./img/fx/bulb.png'), ml.x * 2 - 256, ml.y * 2 - 256, 16, 16, 0.3, 0.5, 0.4, ml.r + Math.PI);
+
+	World.mapData.lfbo.unbind();
 
 	World.draw(dt, false);
 
@@ -201,7 +206,13 @@ Game.draw = function() {
 
 };
 
-
+window.ml = {
+	x: 0,
+	y: 0,
+	px: 0,
+	py: 0,
+	r: 0
+}
 
 // Event Handlers
 

@@ -2,7 +2,7 @@
 /// random.js
 
 var World = {
-	size: 256,
+	size: 128,
 	height: 32,
 	hres: 1024,
 	ready: false
@@ -75,31 +75,35 @@ World.loadLevel = function(o) {
 			viewMatrix: GLOW.defaultCamera.inverse,
 			cameraPosition: GLOW.defaultCamera.position,
 
-			tHeight: World.heightMap,
-			vHeight: World.heightMap2,
+			tHeight: World.mapData.hfbo,
+			vHeight: World.mapData.halfbo,
 			fHeight: new GLOW.Float(World.height),
 
-			tHA: new GLOW.Texture({url: './img/world/' + matFileA + '_height.jpg', onLoadComplete: purge}),
-			tHB: new GLOW.Texture({url: './img/world/' + matFileB + '_height.jpg', onLoadComplete: purge}),
-			tHC: new GLOW.Texture({url: './img/world/' + matFileC + '_height.jpg', onLoadComplete: purge}),
+			tLight: World.mapData.lfbo,
 
-			tDA: new GLOW.Texture({url: './img/world/' + matFileA + '_diffuse.jpg', onLoadComplete: purge}),
-			tDB: new GLOW.Texture({url: './img/world/' + matFileB + '_diffuse.jpg', onLoadComplete: purge}),
-			tDC: new GLOW.Texture({url: './img/world/' + matFileC + '_diffuse.jpg', onLoadComplete: purge}),
+			tHA: Scene.getTexture('./img/world/' + matFileA + '_height.jpg'),
+			tHB: Scene.getTexture('./img/world/' + matFileB + '_height.jpg'),
+			tHC: Scene.getTexture('./img/world/' + matFileC + '_height.jpg'),
 
-			tNA: new GLOW.Texture({url: './img/world/' + matFileA + '_normal.jpg', onLoadComplete: purge}),
-			tNB: new GLOW.Texture({url: './img/world/' + matFileB + '_normal.jpg', onLoadComplete: purge}),
-			tNC: new GLOW.Texture({url: './img/world/' + matFileC + '_normal.jpg', onLoadComplete: purge}),
+			tDA: Scene.getTexture('./img/world/' + matFileA + '_diffuse.jpg'),
+			tDB: Scene.getTexture('./img/world/' + matFileB + '_diffuse.jpg'),
+			tDC: Scene.getTexture('./img/world/' + matFileC + '_diffuse.jpg'),
 
-			tSA: new GLOW.Texture({url: './img/world/' + matFileA + '_spec.jpg', onLoadComplete: purge}),
-			tSB: new GLOW.Texture({url: './img/world/' + matFileB + '_spec.jpg', onLoadComplete: purge}),
-			tSC: new GLOW.Texture({url: './img/world/' + matFileC + '_spec.jpg', onLoadComplete: purge}),
+			tNA: Scene.getTexture('./img/world/' + matFileA + '_normal.jpg'),
+			tNB: Scene.getTexture('./img/world/' + matFileB + '_normal.jpg'),
+			tNC: Scene.getTexture('./img/world/' + matFileC + '_normal.jpg'),
+
+			tSA: Scene.getTexture('./img/world/' + matFileA + '_spec.jpg'),
+			tSB: Scene.getTexture('./img/world/' + matFileB + '_spec.jpg'),
+			tSC: Scene.getTexture('./img/world/' + matFileC + '_spec.jpg'),
 
 			mapres: new GLOW.Vector2(World.hres, World.hres),
 			vertres: new GLOW.Vector2(World.size, World.size),
 
 			dataPass: new GLOW.Bool(false),
 			id: new GLOW.Float(0),
+
+			time: new GLOW.Float(0),
 
 			vertices: vertices,
 			uvs: uvs
@@ -110,50 +114,17 @@ World.loadLevel = function(o) {
 
 };
 
-// World.mapData = {};
-// World.mapData.canvas = {
-// 	height: document.createElement('canvas'),
-// 	humidity: document.createElement('canvas'),
-// 	artifice: document.createElement('canvas'),
-// 	combined: document.createElement('canvas')
-// };
-// World.mapData.
+World.mapData = {};
+World.mapData.hfbo = new GLOW.FBO({size: 1024, data: new Uint8Array(1024 * 1024 * 4)});
+World.mapData.halfbo = new GLOW.FBO({size: 128, data: new Uint8Array(128 * 128 * 4)});
+World.mapData.lfbo = new GLOW.FBO({size: 256, data: new Uint8Array(256 * 256 * 4)});
+World.mapData.needLoad = false;
 
-World.heightCvs = document.createElement('canvas');
-World.heightCvs2 = document.createElement('canvas');
-World.heightCtx = World.heightCvs.getContext('2d');
-World.heightCtx2 = World.heightCvs2.getContext('2d');
-World.heightImage = new Image();
-World.heightImage.addEventListener('load', function(e) {
-	World.heightCvs.width = this.width;
-	World.heightCvs.height = this.height;
-	World.heightCvs2.width = World.size;
-	World.heightCvs2.height = World.size;
-
-	World.heightCtx.fillStyle = '#000';
-	World.heightCtx.fillRect(0, 0, World.hres, World.hres);
-	World.heightCtx.drawImage(this, 0, 0);
-
-	// World.heightCtx.fillRect(512, 512, 512, 512);
-
-	World.heightCtx2.fillStyle = '#000';
-	World.heightCtx2.fillRect(0, 0, World.size, World.size);
-	World.heightCtx2.drawImage(World.heightCvs, 0, 0, World.size, World.size);
-
-	World.heightMap = new GLOW.Texture({});
-	World.heightMap2 = new GLOW.Texture({});
-	World.heightMap.data = World.heightCvs;
-	World.heightMap2.data = World.heightCvs2;
-	World.heightMap.updateTexture();
-	World.heightMap2.updateTexture();
-
-	World.ready = true;
-});
-World.heightImage.src = './img/map.png';
-World.heightMap = undefined;
-World.heightMap2 = undefined;
-
-// document.body.appendChild(World.heightCvs2);
+World.mapData.heightMap = new GLOW.Texture({url: './img/map.png', onLoadComplete: function() {
+	console.log(World.mapData.heightMap);
+	World.mapData.heightMap.updateTexture();
+	World.mapData.needLoad = true;
+}}).init();
 
 World.update = function(dt) {
 	"use strict";
@@ -161,7 +132,6 @@ World.update = function(dt) {
 };
 
 World.draw = function(dt, data) {
-	if (World.ready === false) return;
 	"use strict";
 	if (World.plane.uniforms.viewMatrix !== undefined) GX.cache.invalidateUniform(World.plane.uniforms.viewMatrix);
 	if (World.plane.uniforms.cameraPosition !== undefined) GX.cache.invalidateUniform(World.plane.uniforms.cameraPosition);
@@ -173,5 +143,7 @@ World.draw = function(dt, data) {
 			World.plane.dataPass.set(false);
 		}
 	}
+	// GX.cache.invalidateUniform(World.plane.uniforms.time);
+	// World.plane.time.set((Date.now() % 10000) / 10000);
 	World.plane.draw();
 };

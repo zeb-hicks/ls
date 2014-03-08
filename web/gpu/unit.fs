@@ -15,11 +15,15 @@ uniform sampler2D tHC;
 uniform sampler2D tNC;
 uniform sampler2D tSC;
 
+uniform sampler2D tLight;
+
 uniform sampler2D tHeight;
 uniform vec2 mapres;
 
 uniform bool dataPass;
 uniform float id;
+
+uniform float time;
 
 uniform vec2 location;
 uniform vec3 cameraPosition;
@@ -59,85 +63,90 @@ vec4 hmapnormal(vec2 UV) {
 	return N;
 }
 
-void main() {
-	vec4 mp = hmapnormal(uv);
-	vec3 mpd = texture2D(tHeight, uv).xyz;
-	// vec3 normal = mp.xyz;
-	vec3 color = vec3(0.0, 0.0, 0.0);
-	// vec3 normal = normalize(vnormal + mp.xyz);
-	// color.xyz = normal * 0.5 + 0.5;
-	// vec3 up = vec3(0.0, 1.0, 0.0);
-	// color.xyz = vec3(dot(normal, up));
-
-	// Grid
-	float grid = min(1.0, pow(mod(uv.x * 128.0, 1.0) * 2.0 - 1.0, 16.0) + pow(mod(uv.y * 128.0, 1.0) * 2.0 - 1.0, 16.0));
-
-	// color *= max(0.0, mp.w * 1.2 - 0.2);
-
-	vec2 suv = uv * vec2(16.0);
-	float hr = texture2D(tHA, suv).x * 0.3;
-	// vec3 dr = texture2D(tDRock, suv).xyz;
-	// vec3 nr = normalize(texture2D(tNRock, suv).xyz * 2.0 - 1.0);
-	// vec3 sr = texture2D(tSRock, suv).xyz;
-
-	float hg = texture2D(tHB, suv).x * mpd.y;
-	// vec3 dg = texture2D(tDGrass, suv).xyz;
-	// vec3 ng = normalize(texture2D(tNGrass, suv).xyz * 2.0 - 1.0);
-	// vec3 sg = texture2D(tSGrass, suv).xyz;
-
-	float ht = texture2D(tHC, suv).x * mpd.z;
-	// vec3 dt = texture2D(tDTiles, suv).xyz;
-	// vec3 nt = normalize(texture2D(tNTiles, suv).xyz * 2.0 - 1.0);
-	// vec3 st = texture2D(tSTiles, suv).xyz;
-	vec3 tn;
-	vec3 ts;
-
-	if (hr > hg + 0.01) {
-		if (hr > ht + 0.01) {
-			color = texture2D(tDA, suv).xyz;
-			tn = normalize(texture2D(tNA, suv).xyz * 2.0 - 1.0);
-			ts = texture2D(tSA, suv).xyz;
-			// color.xyz = vec3(1.0, 0.0, 0.0);
-		} else {
-			color = texture2D(tDC, suv).xyz;
-			tn = normalize(texture2D(tNC, suv).xyz * 2.0 - 1.0);
-			ts = texture2D(tSC, suv).xyz;
-			// color.xyz = vec3(0.0, 0.0, 1.0);
-		}
-	} else {
-		if (hg > ht + 0.01) {
-			color = texture2D(tDB, suv).xyz;
-			tn = normalize(texture2D(tNB, suv).xyz * 2.0 - 1.0);
-			ts = texture2D(tSB, suv).xyz;
-			// color.xyz = vec3(0.0, 1.0, 0.0);
-		} else {
-			color = texture2D(tDC, suv).xyz;
-			tn = normalize(texture2D(tNC, suv).xyz * 2.0 - 1.0);
-			ts = texture2D(tSC, suv).xyz;
-			// color.xyz = vec3(0.0, 0.0, 1.0);
-		}
+vec3 light(vec2 uv, vec3 nv, vec3 ts, vec3 ev) {
+	vec3 lout = vec3(0.0);
+	vec3 spec = vec3(0.0);
+	vec2 sdir = vec2(0.0);
+	float r;
+	for (float i = 0.0; i < 64.0; i += 1.0) {
+		r = i / 2048.0;
+		sdir = vec2(cos(i*2.3),sin(i*2.3));
+		lout += texture2D(tLight, uv + sdir * r).xyz / (1.0 + i * 0.2);
 	}
+	spec += ts * ts * texture2D(tLight, uv - 0.015 * (ev.xz / (dot(nv, ev)))).xyz;
+	spec += ts * ts * texture2D(tLight, uv - 0.02 * (ev.xz / (dot(nv, ev)))).xyz;
+	spec += ts * ts * texture2D(tLight, uv - 0.025 * (ev.xz / (dot(nv, ev)))).xyz;
+	spec += ts * ts * texture2D(tLight, uv - 0.03 * (ev.xz / (dot(nv, ev)))).xyz;
+	return lout + spec + 0.33;
+}
 
-	// vec3 normal = normalize(vnormal.xyz + mp.xyz + tn.xyz);
-	vec3 normal = perturbNormal2Arb(cameraPosition - pos, vnormal.xyz, tn.xyz);
-	normal = perturbNormal2Arb(cameraPosition - pos, normal, tn.xyz);
-	vec3 up = vec3(0.0, 1.0, 0.0);
-	vec3 hv = normalize((pos - cameraPosition) - up * 32.0);
-
-	color.xyz *= vec3(dot(normal, up));
-	color.xyz += ts * ts * pow(dot(normal, hv), 64.0);
-	// color.xyz = vnormal.xyz;
-	// color.xyz = abs(vnormal.xyz);
-	// color.xyz = normal;
-
-	// Fake lighting
-	color *= max(0.0, mp.w * 1.2 - 0.2);
-
-	gl_FragColor = vec4(color, 1.0);
+void main() {
 	if (dataPass == true) {
 		// vec3 ps = abs(pos);
 		gl_FragColor.x = pos.x / 128.0 + 0.5;
 		gl_FragColor.y = pos.z / 128.0 + 0.5;
 		gl_FragColor.z = id;
+		gl_FragColor.w = 1.0;
+		return;
 	}
+
+	vec4 mp = hmapnormal(uv);
+	vec3 mpd = texture2D(tHeight, uv).xyz;
+	vec3 color = vec3(0.0, 0.0, 0.0);
+
+	// Grid
+	float grid = min(1.0, pow(mod(uv.x * 128.0, 1.0) * 2.0 - 1.0, 16.0) + pow(mod(uv.y * 128.0, 1.0) * 2.0 - 1.0, 16.0));
+
+	vec2 suv = uv * vec2(16.0);
+	float ha = texture2D(tHA, suv).x * 0.3;
+	float hb = texture2D(tHB, suv).x * mpd.y;
+	float hc = texture2D(tHC, suv).x * mpd.z;
+
+	vec3 tn;
+	vec3 ts;
+	float low = hc;
+	float diff;
+
+	if (ha > hb) {
+		if (hb > hc) { low = hb; }
+		if (ha > hc) {
+			color = texture2D(tDA, suv).xyz;
+			tn = normalize(texture2D(tNA, suv).xyz * 2.0 - 1.0);
+			ts = texture2D(tSA, suv).xyz;
+			diff = ha - low;
+		} else {
+			color = texture2D(tDC, suv).xyz;
+			tn = normalize(texture2D(tNC, suv).xyz * 2.0 - 1.0);
+			ts = texture2D(tSC, suv).xyz;
+			diff = low - ha;
+		}
+	} else {
+		if (ha > hc) { low = ha; }
+		if (hb > hc) {
+			color = texture2D(tDB, suv).xyz;
+			tn = normalize(texture2D(tNB, suv).xyz * 2.0 - 1.0);
+			ts = texture2D(tSB, suv).xyz;
+			diff = hb - low;
+		} else {
+			color = texture2D(tDC, suv).xyz;
+			tn = normalize(texture2D(tNC, suv).xyz * 2.0 - 1.0);
+			ts = texture2D(tSC, suv).xyz;
+			diff = low - hb;
+		}
+	}
+
+	vec3 normal = perturbNormal2Arb(cameraPosition - pos, vnormal.xyz, tn.xyz);
+	normal = perturbNormal2Arb(cameraPosition - pos, normal, tn.xyz);
+	vec3 albedo = color;
+	vec3 viewVector = normalize(cameraPosition - pos);
+
+	color = albedo * light(uv, normal, ts, viewVector);
+
+	color.xyz = color.xyz * (1.0 - max(0.0, min(1.0, 0.1 * (1.0 / diff / 12.0))) * 0.33);
+
+	// Depth fog.
+	color *= max(0.0, mp.w * 1.2 - 0.2);
+
+	gl_FragColor = vec4(color, 1.0);
+	// gl_FragColor.x = 1.0;
 }

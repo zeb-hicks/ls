@@ -36,10 +36,27 @@ Camera.update = function(dt) {
 	var dh = 24 * Math.cos(Game.camera.tilt);
 	var dv = 24 * Math.sin(Game.camera.tilt);
 
-	if (World.heightCtx !== undefined) {
-		var id = World.heightCtx.getImageData(Math.round(Game.camera.target.x / World.size * World.hres) + World.hres / 2, Math.round(Game.camera.target.z / World.size * World.hres) + World.hres / 2, 1, 1);
-		Game.camera.target.y = id.data[0] / 255 * World.height;
-	}
+	// var hsz = World.size / 2;
+	// var xp = (Game.camera.target.x + hsz);
+	// var zp = (Game.camera.target.z + hsz);
+	// if (xp > 0 && xp < World.size && zp > 0 && zp < World.size) {
+	// 	var xd = xp % 1;
+	// 	var zd = zp % 1;
+	// 	var xo = 1.0 - xd;
+	// 	var zo = 1.0 - zd;
+	// 	var s = 1024;
+	// 	var i = 1024 * 3 * Math.floor(xp);
+	// 	var i = 1024 * 3 * Math.floor(zp);
+	// 	var h0 = World.mapData.hfbo.data[i];
+	// 	var h1 = World.mapData.hfbo.data[i+1];
+	// 	var h2 = World.mapData.hfbo.data[i+s];
+	// 	var h3 = World.mapData.hfbo.data[i+s+1];
+	// 	// console.log(i, h0, h1, h2, h3);
+	// 	var hv = h0 * xo * zo + h1 * xd * zo + h2 * xo * zd + h3 * xd * zd;
+	// 	Game.camera.target.y = hv / 255 * World.height;
+	// } else {
+	// 	Game.camera.target.y = 0;
+	// }
 
 	Game.camera.targetPosition.x = Game.camera.target.x + dh * radius * Math.cos(Game.camera.angle);
 	Game.camera.targetPosition.y = Game.camera.target.y + dv * radius;
