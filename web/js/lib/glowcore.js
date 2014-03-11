@@ -1389,6 +1389,8 @@ GLOW.FBO = (function() {
 
             if( setViewport === undefined || setViewport === true )
                 GL.viewport( GLOW.currentContext.viewport.x, GLOW.currentContext.viewport.y, GLOW.currentContext.viewport.width, GLOW.currentContext.viewport.height );
+                GL.currentWidth = GLOW.currentContext.width;
+                GL.currentHeight = GLOW.currentContext.height;
         }
         return this;
     };
@@ -1405,6 +1407,8 @@ GLOW.FBO = (function() {
             this.viewport.height = setup.height !== undefined ? setup.height : this.viewport.height;
         }
         GL.viewport( this.viewport.x, this.viewport.y, this.viewport.width, this.viewport.height );
+        GL.currentWidth = this.viewport.width;
+        GL.currentHeight = this.viewport.height;
         return this;
     };
 

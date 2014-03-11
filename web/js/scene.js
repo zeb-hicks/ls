@@ -10,6 +10,7 @@ var GX = Scene.GX = new GLOW.Context({
 GX.setupCulling({frontFace: GL.CW});
 
 GX.enableExtension('OES_standard_derivatives');
+GX.enableExtension('OES_texture_float');
 
 Scene.particles = [];
 
@@ -52,40 +53,56 @@ Scene.getTexture = function(img) {
 			Scene.GX.cache.clear();
 		}});
 	}
-	if (Scene.textureList[img].texture === undefined) {
-		Scene.textureList[img].init();
+	if (Scene.textureList[img].texture === undefined && typeof Scene.textureList[img].data === 'string') {
+		setTimeout(function(){Scene.textureList[img].init();}, 1000);
 	}
 	return Scene.textureList[img];
 };
 
-Scene.drawBillboard = function(fbo, img, x, y, w, h, r, g, b, rot) {
+Scene.drawBillboard = function(img, x, y, w, h, r, g, b, a, rot) {
 
-	if (fbo !== undefined && fbo !== null) {
-		if (Scene.Billboard.res.x !== fbo.width || Scene.Billboard.res.y !== fbo.height) {
-			Scene.Billboard.res.set(fbo.width, fbo.height);
-			Scene.GX.cache.invalidateUniform(Scene.Billboard.uniforms.res);
-		}
-	} else {
-		if (Scene.Billboard.res.x !== window.innerWidth || Scene.Billboard.res.y !== window.innerHeight) {
-			Scene.Billboard.res.set(window.innerWidth, window.innerHeight);
-			Scene.GX.cache.invalidateUniform(Scene.Billboard.uniforms.res);
-		}
+	Scene.Billboard.overdest.set(false);
+	Scene.GX.cache.invalidateUniform(Scene.Billboard.uniforms.overdest);
+
+	Scene.drawBillboardAt(img, x, y, w, h, r, g, b, a, rot);
+
+};
+
+Scene.drawBillboardOver = function(img, dst, x, y, w, h, r, g, b, a, rot) {
+
+	Scene.Billboard.uniforms.dst.data = dst;
+	Scene.GX.cache.invalidateUniform(Scene.Billboard.uniforms.dst);
+
+	Scene.Billboard.overdest.set(true);
+	Scene.GX.cache.invalidateUniform(Scene.Billboard.uniforms.overdest);
+
+	Scene.drawBillboardAt(img, x, y, w, h, r, g, b, a, rot);
+
+};
+
+Scene.drawBillboardAt = function(img, x, y, w, h, r, g, b, a, rot) {
+
+	if (Scene.Billboard.res.x !== GL.currentWidth || Scene.Billboard.res.y !== GL.currentHeight) {
+		Scene.Billboard.res.set(GL.currentWidth, GL.currentHeight);
+		Scene.GX.cache.invalidateUniform(Scene.Billboard.uniforms.res);
 	}
+
 	if (Scene.Billboard.pos.x !== x || Scene.Billboard.pos.y !== y || Scene.Billboard.pos.z !== w || Scene.Billboard.pos.w !== h) {
 		Scene.Billboard.pos.set(x, y, w, h);
 		Scene.GX.cache.invalidateUniform(Scene.Billboard.uniforms.pos);
 	}
+
 	Scene.GX.cache.invalidateUniform(Scene.Billboard.uniforms.img);
 	Scene.Billboard.uniforms.img.data = img;
 
 	if (r !== undefined && g !== undefined && b !== undefined) {
-		if (Scene.Billboard.mult.x !== r || Scene.Billboard.mult.y !== g || Scene.Billboard.mult.z !== b) {
-			Scene.Billboard.mult.set(r, g, b);
+		if (Scene.Billboard.mult.x !== r || Scene.Billboard.mult.y !== g || Scene.Billboard.mult.z !== b || Scene.Billboard.mult.w !== a) {
+			Scene.Billboard.mult.set(r, g, b, a);
 			Scene.GX.cache.invalidateUniform(Scene.Billboard.uniforms.mult);
 		}
 	} else {
-		if (Scene.Billboard.mult.x !== 1 || Scene.Billboard.mult.y !== 1 || Scene.Billboard.mult.z !== 1) {
-			Scene.Billboard.mult.set(1, 1, 1);
+		if (Scene.Billboard.mult.x !== 1 || Scene.Billboard.mult.y !== 1 || Scene.Billboard.mult.z !== 1 || Scene.Billboard.mult.w !== 1) {
+			Scene.Billboard.mult.set(1, 1, 1, 1);
 			Scene.GX.cache.invalidateUniform(Scene.Billboard.uniforms.mult);
 		}
 	}
@@ -96,11 +113,7 @@ Scene.drawBillboard = function(fbo, img, x, y, w, h, r, g, b, rot) {
 		Scene.GX.cache.invalidateUniform(Scene.Billboard.uniforms.rot);
 	}
 
-	if (Scene.Billboard.uniforms.img.data === undefined) {
-		console.log('What the fuck.');
-	} else {
-		Scene.Billboard.draw();
-	}
+	Scene.Billboard.draw();
 
 };
 
@@ -112,7 +125,9 @@ Scene.Billboard = new GLOW.Shader({
 		pos: new GLOW.Vector4(0, 0, 1, 1),
 		rot: new GLOW.Float(0),
 		img: undefined,
-		mult: new GLOW.Vector3(1.0, 1.0, 1.0),
+		dst: new GLOW.FBO(),
+		overdest: new GLOW.Bool(false),
+		mult: new GLOW.Vector4(1, 1, 1, 1),
 		vertices: new Float32Array([-1, -1, 0, 1, -1, 0, -1, 1, 0, 1, 1, 0]),
 		uvs: new Float32Array([0, 0, 1, 0, 0, 1, 1, 1])
 	},

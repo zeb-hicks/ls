@@ -8,12 +8,8 @@ var World = {
 	ready: false
 };
 
-World.loadLevel = function(o) {
+World.loadLevel = function(cb) {
 	"use strict";
-
-	if (o === undefined) o = {};
-
-	// World.size = (o.size !== undefined ? o.size : 128);
 
 	var i, j, k, l, x, y, z;
 	var res = World.size;
@@ -112,6 +108,8 @@ World.loadLevel = function(o) {
 		primitives: GL.TRIANGLES
 	});
 
+	if (cb !== undefined) cb();
+
 };
 
 World.mapData = {};
@@ -121,8 +119,8 @@ World.mapData.lfbo = new GLOW.FBO({size: 256, data: new Uint8Array(256 * 256 * 4
 World.mapData.needLoad = false;
 
 World.mapData.heightMap = new GLOW.Texture({url: './img/map.png', onLoadComplete: function() {
-	console.log(World.mapData.heightMap);
-	World.mapData.heightMap.updateTexture();
+	// console.log(World.mapData.heightMap);
+	// World.mapData.heightMap.updateTexture();
 	World.mapData.needLoad = true;
 }}).init();
 

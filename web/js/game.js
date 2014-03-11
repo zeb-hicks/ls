@@ -15,10 +15,16 @@ Game.init = function() {
 	GLOW.defaultCamera.position.set(0, 0, 10);
 	GLOW.defaultCamera.update();
 
-	World.loadLevel();
+	GX.setupBlend({
+		equation: GL.ADD,
+		src: GL.ONE,
+		dst: GL.ONE_MINUS_SRC_ALPHA
+	});
 
-	Game.loop();
-	Game.draw();
+	World.loadLevel(function() {
+		Game.loop();
+		Game.draw();
+	});
 
 };
 
@@ -149,7 +155,9 @@ Game.draw = function() {
 	dt = dt > 0.2 ? 0.2 : dt;
 	requestAnimationFrame(Game.draw);
 
-	// Scene.GX.clear();
+	Scene.GX.clear();
+
+	GX.enableBlend(false);
 
 	World.draw(dt, true);
 
@@ -163,14 +171,17 @@ Game.draw = function() {
 
 	Scene.GX.GL.readPixels(Game.input.mouse.x, window.innerHeight - Game.input.mouse.y, 1, 1, GL.RGBA, GL.UNSIGNED_BYTE, pb);
 
-	if (World.mapData.needLoad === true) {
+	if (World.mapData.needLoad === true && World.mapData.heightMap.data.complete === true) {
 		World.mapData.hfbo.bind();
-		Scene.drawBillboard(World.mapData.hfbo, World.mapData.heightMap, 0, 0, 1024, 1024);
+		Scene.drawBillboard(World.mapData.heightMap, 0, 0, 1024, 1024);
 		World.mapData.hfbo.unbind();
 		World.mapData.halfbo.bind();
-		Scene.drawBillboard(World.mapData.halfbo, World.mapData.heightMap, 0, 0, 128, 128);
+		Scene.drawBillboard(World.mapData.heightMap, 0, 0, 128, 128);
 		World.mapData.halfbo.unbind();
+		// World.mapData.needLoad = false;
 	}
+
+	Scene.GX.clear();
 
 	if (pb[0] !== 0 && pb[1] !== 0) {
 		ml.px = ml.x;
@@ -178,14 +189,36 @@ Game.draw = function() {
 		ml.x += (pb[0] - ml.x) / 8;
 		ml.y += (pb[1] - ml.y) / 8;
 		ml.r = Math.atan2(ml.py - ml.y, ml.px - ml.x);
+
+		if (Game.input.mouse.buttons[0] == true) {
+
+			var w = World.mapData.hfbo.width / World.size;
+			var h = World.mapData.hfbo.width;
+
+			GX.enableBlend(true);
+
+			World.mapData.hfbo.bind();
+			Scene.drawBillboardOver(Scene.getTexture('./img/fx/puff.png'), World.mapData.hfbo, ml.x * w - h, ml.y * w - h, 128, 128, -1, -1, -1, 0.5, ml.r + Math.PI);
+			World.mapData.hfbo.unbind();
+
+			w = World.mapData.halfbo.width / World.size;
+			h = World.mapData.halfbo.width;
+
+			World.mapData.halfbo.bind();
+			Scene.drawBillboardOver(Scene.getTexture('./img/fx/puff.png'), World.mapData.halfbo, ml.x * w - h, ml.y * w - h, 16, 16, -1, -1, -1, 0.5, ml.r + Math.PI);
+			World.mapData.halfbo.unbind();
+
+		}
 	}
 
 	World.mapData.lfbo.bind();
 
 	Scene.GX.clear();
-	Scene.drawBillboard(World.mapData.lfbo, Scene.getTexture('./img/fx/bulb.png'), ml.x * 2 - 256, ml.y * 2 - 256, 16, 16, 0.3, 0.5, 0.4, ml.r + Math.PI);
+	Scene.drawBillboard(Scene.getTexture('./img/fx/bulb.png'), ml.x * 2 - 256, ml.y * 2 - 256, 16, 16, 1, 1, 1, 1, ml.r + Math.PI);
 
 	World.mapData.lfbo.unbind();
+
+	GX.enableBlend(false);
 
 	World.draw(dt, false);
 
@@ -215,15 +248,6 @@ window.ml = {
 }
 
 // Event Handlers
-
-
-// window.colorBox = document.createElement('div');
-// colorBox.style.position = 'absolute';
-// colorBox.style.left = '0px';
-// colorBox.style.top = '0px';
-// colorBox.style.width = '32px';
-// colorBox.style.height = '32px';
-// document.body.appendChild(colorBox);
 
 document.body.addEventListener('mousemove', function(e) {
 	if (Game.input.mouse.locked) {
