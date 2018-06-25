@@ -15,12 +15,12 @@ var opts = {
 	cert: fs.readFileSync('ssl.cert')
 };
 
-// var server = http.createServer(app);
-var server = https.createServer(opts, app);
+var server = http.createServer(app);
+// var server = https.createServer(opts, app);
 var io = sio.listen(server);
 io.set('log level', 1);
-// server.listen(80);
-server.listen(443);
+server.listen(80);
+// server.listen(443);
 
 app.use(express.cookieParser('frosted potatoes'));
 

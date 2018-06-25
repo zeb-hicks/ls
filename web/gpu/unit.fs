@@ -67,17 +67,21 @@ vec3 light(vec2 uv, vec3 nv, vec3 ts, vec3 ev) {
 	vec3 lout = vec3(0.0);
 	vec3 spec = vec3(0.0);
 	vec2 sdir = vec2(0.0);
+	float aod = 0.0;
+	float hc = texture2D(tHeight, uv).x;
 	float r;
 	for (float i = 0.0; i < 64.0; i += 1.0) {
-		r = i / 2048.0;
+		r = i / 8192.0;
 		sdir = vec2(cos(i*2.3),sin(i*2.3));
 		lout += texture2D(tLight, uv + sdir * r).xyz / (1.0 + i * 0.2);
+		aod += hc - texture2D(tHeight, uv + sdir * r).x;
 	}
-	spec += ts * ts * texture2D(tLight, uv - 0.015 * (ev.xz / (dot(nv, ev)))).xyz;
-	spec += ts * ts * texture2D(tLight, uv - 0.02 * (ev.xz / (dot(nv, ev)))).xyz;
-	spec += ts * ts * texture2D(tLight, uv - 0.025 * (ev.xz / (dot(nv, ev)))).xyz;
-	spec += ts * ts * texture2D(tLight, uv - 0.03 * (ev.xz / (dot(nv, ev)))).xyz;
-	return lout + spec + 0.33;
+	vec2 quot = ev.xz / (dot(nv, ev));
+	spec += ts * ts * texture2D(tLight, uv - 0.015 * quot).xyz;
+	spec += ts * ts * texture2D(tLight, uv - 0.02 * quot).xyz;
+	spec += ts * ts * texture2D(tLight, uv - 0.025 * quot).xyz;
+	spec += ts * ts * texture2D(tLight, uv - 0.03 * quot).xyz;
+	return lout + spec + 0.33 + aod * 0.06;
 }
 
 void main() {
@@ -87,6 +91,15 @@ void main() {
 		gl_FragColor.y = pos.z / 128.0 + 0.5;
 		gl_FragColor.z = id;
 		gl_FragColor.w = 1.0;
+
+		float hC = texture2D(tHeight, uv).x;
+		float hD = 0.0;
+		float r = 0.0;
+		for (float i = 0.0; i < 24.0; i += 1.0) {
+			r = i / 256.0;
+			hD -= min(0.0, (hC - texture2D(tHeight, uv + vec2(cos(i*2.3), sin(i*2.3)) * r).x) * 2.0);
+		}
+		gl_FragColor.z = hD;
 		return;
 	}
 
@@ -98,7 +111,7 @@ void main() {
 	float grid = min(1.0, pow(mod(uv.x * 128.0, 1.0) * 2.0 - 1.0, 16.0) + pow(mod(uv.y * 128.0, 1.0) * 2.0 - 1.0, 16.0));
 
 	vec2 suv = uv * vec2(16.0);
-	float ha = texture2D(tHA, suv).x * 0.3;
+	float ha = texture2D(tHA, suv).x * 0.1;
 	float hb = texture2D(tHB, suv).x * mpd.y;
 	float hc = texture2D(tHC, suv).x * mpd.z;
 

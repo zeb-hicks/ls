@@ -9,7 +9,7 @@ var Unit = function(o) {
 	this._direction = new GLOW.Float(o._direction || 0);
 
 	this.moveSpeed = o.moveSpeed || 10;
-	this.turnSpeed = o.turnSpeed || 0; // Zero turn speed is no turn delay.
+	this.turnSpeed = o.turnSpeed || 0.1;
 
 	this.orders = [];
 

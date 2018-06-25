@@ -15,11 +15,9 @@ Game.init = function() {
 	GLOW.defaultCamera.position.set(0, 0, 10);
 	GLOW.defaultCamera.update();
 
-	GX.setupBlend({
-		equation: GL.ADD,
-		src: GL.ONE,
-		dst: GL.ONE_MINUS_SRC_ALPHA
-	});
+	// Preload displacement texture (so first click works properly)
+	Scene.getTexture('./img/fx/scorch_0.png');
+	Scene.getTexture('./img/fx/ring_small.png');
 
 	World.loadLevel(function() {
 		Game.loop();
@@ -27,6 +25,45 @@ Game.init = function() {
 	});
 
 };
+
+Game.loadList = {};
+Game.loadList.list = {};
+Game.loadList.add = function(id, type) {
+	Game.loadList.list[id] = type !== undefined ? type : 'data';
+	Game.loadList.total++;
+	Game.loadList.element.innerHTML = Math.round((Game.loadList.progress / Game.loadList.total) * 100) + '% (' + Game.loadList.progress + '/' + Game.loadList.total + ')';
+	if (Game.loadList.total == Game.loadList.progress) { Game.loadList.element.style.opacity = '0'; }
+	else { Game.loadList.element.style.opacity = '1'; }
+};
+Game.loadList.done = function(id) {
+	//Game.loadList.list[id];
+	Game.loadList.progress++;
+	Game.loadList.element.innerHTML = Math.round((Game.loadList.progress / Game.loadList.total) * 100) + '% (' + Game.loadList.progress + '/' + Game.loadList.total + ')';
+	if (Game.loadList.total == Game.loadList.progress) { Game.loadList.element.style.opacity = '0'; }
+	else { Game.loadList.element.style.opacity = '1'; }
+};
+Game.loadList.progress = 0;
+Game.loadList.total = 0;
+var e = document.createElement('div');
+e.style.position = 'absolute';
+e.style.left = '50%';
+e.style.top = '50%';
+e.style.width = '128px';
+e.style.height = '32px';
+e.style.lineHeight = '32px';
+e.style.verticalAlign = 'middle';
+e.style.textAlign = 'center';
+e.style.margin = '-16px -64px;';
+e.style.fontWeight = 'bold';
+e.style.fontFamily = 'sans-serif';
+e.style.color = '#fff';
+e.style.opacity = '1';
+e.style.transition = 'opacity 0.16s ease-in-out';
+e.style.pointerEvents = 'none';
+e.innerHTML = '0% (0/0)';
+Game.loadList.element = e;
+document.body.appendChild(Game.loadList.element);
+
 
 Game.clock = {
 	loopTime: performance.now(),
@@ -147,6 +184,16 @@ Game.loop = function() {
 	setTimeout(Game.loop, 16);
 };
 
+var scorchFrame = 0;
+
+function sortParticles(a, b) {
+	"use strict";
+	var da, db;
+	da = Math.pow(a.position.x - GLOW.defaultCamera.position.x, 2.0) + Math.pow(a.position.y - GLOW.defaultCamera.position.y, 2.0) + Math.pow(a.position.z - GLOW.defaultCamera.position.z, 2.0);
+	db = Math.pow(b.position.x - GLOW.defaultCamera.position.x, 2.0) + Math.pow(b.position.y - GLOW.defaultCamera.position.y, 2.0) + Math.pow(b.position.z - GLOW.defaultCamera.position.z, 2.0);
+	return da - db;
+}
+
 Game.draw = function() {
     "use strict";
 	var dt = performance.now() - Game.clock.drawTime;
@@ -155,84 +202,44 @@ Game.draw = function() {
 	dt = dt > 0.2 ? 0.2 : dt;
 	requestAnimationFrame(Game.draw);
 
-	Scene.GX.clear();
+	// Sort the particles to be drawn.
+	Scene.particles.sort(sortParticles);
 
+	// Clear the last frame.
+	Scene.GX.clear();
+	// Disable any blending.
 	GX.enableBlend(false);
 
+	// Draw the map data pass.
+	Scene.GX.enableDepthTest(true);
 	World.draw(dt, true);
+	// Alter the map where needed.
+	World.alterMap(dt);
 
-	var pb = new Uint8Array(4);
-	World.mapData.hfbo.bind();
-	var diff = World.mapData.hfbo.width / World.size;
-	Scene.GX.GL.readPixels(512 + Game.camera.target.x * diff, 512 + Game.camera.target.z * diff, 1, 1, GL.RGBA, GL.UNSIGNED_BYTE, pb);
-	World.mapData.hfbo.unbind();
-
-	Game.camera.target.y = pb[0] / 255 * World.height;
-
-	Scene.GX.GL.readPixels(Game.input.mouse.x, window.innerHeight - Game.input.mouse.y, 1, 1, GL.RGBA, GL.UNSIGNED_BYTE, pb);
-
-	if (World.mapData.needLoad === true && World.mapData.heightMap.data.complete === true) {
-		World.mapData.hfbo.bind();
-		Scene.drawBillboard(World.mapData.heightMap, 0, 0, 1024, 1024);
-		World.mapData.hfbo.unbind();
-		World.mapData.halfbo.bind();
-		Scene.drawBillboard(World.mapData.heightMap, 0, 0, 128, 128);
-		World.mapData.halfbo.unbind();
-		// World.mapData.needLoad = false;
-	}
-
-	Scene.GX.clear();
-
-	if (pb[0] !== 0 && pb[1] !== 0) {
-		ml.px = ml.x;
-		ml.py = ml.y;
-		ml.x += (pb[0] - ml.x) / 8;
-		ml.y += (pb[1] - ml.y) / 8;
-		ml.r = Math.atan2(ml.py - ml.y, ml.px - ml.x);
-
-		if (Game.input.mouse.buttons[0] == true) {
-
-			var w = World.mapData.hfbo.width / World.size;
-			var h = World.mapData.hfbo.width;
-
-			GX.enableBlend(true);
-
-			World.mapData.hfbo.bind();
-			Scene.drawBillboardOver(Scene.getTexture('./img/fx/puff.png'), World.mapData.hfbo, ml.x * w - h, ml.y * w - h, 128, 128, -1, -1, -1, 0.5, ml.r + Math.PI);
-			World.mapData.hfbo.unbind();
-
-			w = World.mapData.halfbo.width / World.size;
-			h = World.mapData.halfbo.width;
-
-			World.mapData.halfbo.bind();
-			Scene.drawBillboardOver(Scene.getTexture('./img/fx/puff.png'), World.mapData.halfbo, ml.x * w - h, ml.y * w - h, 16, 16, -1, -1, -1, 0.5, ml.r + Math.PI);
-			World.mapData.halfbo.unbind();
-
-		}
-	}
+	// Draw light from any particles
 
 	World.mapData.lfbo.bind();
 
+	Scene.GX.enableDepthTest(false);
 	Scene.GX.clear();
-	Scene.drawBillboard(Scene.getTexture('./img/fx/bulb.png'), ml.x * 2 - 256, ml.y * 2 - 256, 16, 16, 1, 1, 1, 1, ml.r + Math.PI);
+	Scene.GX.enableBlend(true, {
+		equation: GL.FUNC_ADD,
+		src: GL.SRC_ALPHA,
+		dst: GL.ONE
+	});
+	// if (Game.input.mouse.buttons[2] == true) {
+		Scene.drawBillboard(Scene.getTexture('./img/fx/ring_small.png'), (ml.x - 128) * 4, (ml.y - 128) * 4, 4, 4, ml.c >= 1 ? 0 : 1, ml.c > 0.5 ? 1 : 0, 0, 1);
+	// }
 
 	World.mapData.lfbo.unbind();
 
-	GX.enableBlend(false);
 
+
+	// Draw the textured map mesh.
+	Scene.GX.enableDepthTest(true);
 	World.draw(dt, false);
 
-	// Next we'll sort the particles to be drawn.
-
-	Scene.particles.sort(function(a, b) {
-		var da, db;
-
-		da = Math.pow(a.position.x - GLOW.defaultCamera.position.x, 2.0) + Math.pow(a.position.y - GLOW.defaultCamera.position.y, 2.0) + Math.pow(a.position.z - GLOW.defaultCamera.position.z, 2.0);
-		db = Math.pow(b.position.x - GLOW.defaultCamera.position.x, 2.0) + Math.pow(b.position.y - GLOW.defaultCamera.position.y, 2.0) + Math.pow(b.position.z - GLOW.defaultCamera.position.z, 2.0);
-
-		return da - db;
-	});
-
+	// Draw all particles.
 	for (var i = 0; i < Scene.particles.length; i++) {
 		Scene.particles[i].draw();
 	}
@@ -242,8 +249,12 @@ Game.draw = function() {
 window.ml = {
 	x: 0,
 	y: 0,
+	c: 0,
 	px: 0,
 	py: 0,
+	tx: 0,
+	ty: 0,
+	tc: 0,
 	r: 0
 }
 
@@ -297,5 +308,6 @@ function plocked(e) {
 document.addEventListener('pointerlockchange', plocked);
 document.addEventListener('webkitpointerlockchange', plocked);
 document.addEventListener('mozpointerlockchange', plocked);
+document.addEventListener('selectstart', function(e) {e.preventDefault();});
 document.body.requestPointerLock = document.body.requestPointerLock || document.body.webkitRequestPointerLock || document.body.mozRequestPointerLock;
 document.exitPointerLock = document.exitPointerLock || document.webkitExitPointerLock || document.mozExitPointerLock;

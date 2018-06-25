@@ -11,6 +11,7 @@ GX.setupCulling({frontFace: GL.CW});
 
 GX.enableExtension('OES_standard_derivatives');
 GX.enableExtension('OES_texture_float');
+GX.enableExtension('OES_texture_float_linear');
 
 Scene.particles = [];
 
@@ -49,38 +50,22 @@ Scene.Geometry.makeShader = function() {
 Scene.textureList = {};
 Scene.getTexture = function(img) {
 	if (Scene.textureList[img] === undefined) {
-		Scene.textureList[img] = new GLOW.Texture({url: img, onload: function(){
+		Game.loadList.add(img, 'texture');
+		Scene.textureList[img] = new GLOW.Texture({url: img, onLoadComplete: function(){
+			Game.loadList.done(img);
 			Scene.GX.cache.clear();
 		}});
 	}
 	if (Scene.textureList[img].texture === undefined && typeof Scene.textureList[img].data === 'string') {
-		setTimeout(function(){Scene.textureList[img].init();}, 1000);
+		setTimeout(function(){Scene.textureList[img].init();}, 16);
+		// setTimeout(function(){Scene.textureList[img].init();}, 1000);
 	}
 	return Scene.textureList[img];
 };
 
 Scene.drawBillboard = function(img, x, y, w, h, r, g, b, a, rot) {
 
-	Scene.Billboard.overdest.set(false);
-	Scene.GX.cache.invalidateUniform(Scene.Billboard.uniforms.overdest);
-
-	Scene.drawBillboardAt(img, x, y, w, h, r, g, b, a, rot);
-
-};
-
-Scene.drawBillboardOver = function(img, dst, x, y, w, h, r, g, b, a, rot) {
-
-	Scene.Billboard.uniforms.dst.data = dst;
-	Scene.GX.cache.invalidateUniform(Scene.Billboard.uniforms.dst);
-
-	Scene.Billboard.overdest.set(true);
-	Scene.GX.cache.invalidateUniform(Scene.Billboard.uniforms.overdest);
-
-	Scene.drawBillboardAt(img, x, y, w, h, r, g, b, a, rot);
-
-};
-
-Scene.drawBillboardAt = function(img, x, y, w, h, r, g, b, a, rot) {
+	if (!img) return false;
 
 	if (Scene.Billboard.res.x !== GL.currentWidth || Scene.Billboard.res.y !== GL.currentHeight) {
 		Scene.Billboard.res.set(GL.currentWidth, GL.currentHeight);
@@ -95,7 +80,7 @@ Scene.drawBillboardAt = function(img, x, y, w, h, r, g, b, a, rot) {
 	Scene.GX.cache.invalidateUniform(Scene.Billboard.uniforms.img);
 	Scene.Billboard.uniforms.img.data = img;
 
-	if (r !== undefined && g !== undefined && b !== undefined) {
+	if (r !== undefined && g !== undefined && b !== undefined && a !== undefined) {
 		if (Scene.Billboard.mult.x !== r || Scene.Billboard.mult.y !== g || Scene.Billboard.mult.z !== b || Scene.Billboard.mult.w !== a) {
 			Scene.Billboard.mult.set(r, g, b, a);
 			Scene.GX.cache.invalidateUniform(Scene.Billboard.uniforms.mult);
@@ -115,6 +100,8 @@ Scene.drawBillboardAt = function(img, x, y, w, h, r, g, b, a, rot) {
 
 	Scene.Billboard.draw();
 
+	return true;
+
 };
 
 Scene.Billboard = new GLOW.Shader({
@@ -125,8 +112,6 @@ Scene.Billboard = new GLOW.Shader({
 		pos: new GLOW.Vector4(0, 0, 1, 1),
 		rot: new GLOW.Float(0),
 		img: undefined,
-		dst: new GLOW.FBO(),
-		overdest: new GLOW.Bool(false),
 		mult: new GLOW.Vector4(1, 1, 1, 1),
 		vertices: new Float32Array([-1, -1, 0, 1, -1, 0, -1, 1, 0, 1, 1, 0]),
 		uvs: new Float32Array([0, 0, 1, 0, 0, 1, 1, 1])
